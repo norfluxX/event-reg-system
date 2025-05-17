@@ -20,7 +20,14 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build Docker image
-      run: docker build . -t ${{ secrets.DOCKER_USERNAME }}/event-reg-system:latest
+      run: |
+        docker build . \
+          --build-arg PORT=${{ secrets.PORT }} \
+          --build-arg MONGO_URI=${{ secrets.MONGO_URI }} \
+          --build-arg DB_NAME=${{ secrets.DB_NAME }} \
+          --build-arg GMAIL_USERNAME=${{ secrets.GMAIL_USERNAME }} \
+          --build-arg GMAIL_PASSWORD=${{ secrets.GMAIL_PASSWORD }} \
+          -t ${{ secrets.DOCKER_USERNAME }}/event-reg-system:latest
 
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/event-reg-system:latest
