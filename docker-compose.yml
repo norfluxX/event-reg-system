@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongodb:27017/registrations
+      - DB_NAME=registrations
+      - GMAIL_USER=${GMAIL_USER}
+      - GMAIL_PASS=${GMAIL_PASS}
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=registrations
+    restart: unless-stopped
+
+volumes:
+  mongodb_data: 

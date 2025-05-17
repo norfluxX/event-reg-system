@@ -116,3 +116,99 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Font Awesome for the icons
 - Nodemailer for email functionality
 - QRCode for QR code generation
+
+## Docker Setup
+
+### Building and Running with Docker Compose
+The easiest way to run the application is using Docker Compose, which will set up both the application and MongoDB:
+
+```bash
+# Build and start the containers
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the containers
+docker-compose down
+```
+
+### Manual Docker Setup
+If you prefer to run containers individually:
+
+1. Build the application image:
+```bash
+docker build -t eventpro .
+```
+
+2. Run MongoDB:
+```bash
+docker run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -v mongodb_data:/data/db \
+  -e MONGO_INITDB_DATABASE=registrations \
+  mongo:latest
+```
+
+3. Run the application:
+```bash
+docker run -d \
+  -p 3000:3000 \
+  -e PORT=3000 \
+  -e MONGO_URI=mongodb://mongodb:27017/registrations \
+  -e DB_NAME=registrations \
+  -e GMAIL_USER=your_email \
+  -e GMAIL_PASS=your_app_password \
+  --name eventpro \
+  --link mongodb \
+  eventpro
+```
+
+### MongoDB Configuration
+- Database Name: `registrations`
+- Port: `27017`
+- Data Persistence: Docker volume `mongodb_data`
+- Connection String: `mongodb://mongodb:27017/registrations`
+
+#### Database Initialization
+The database is automatically initialized with:
+- Collection schema validation
+- Required fields validation
+- Email format validation
+- Unique indexes on email and registrationId
+- Index on registration date for better query performance
+
+The initialization script (`mongo-init.js`) runs automatically when the MongoDB container is created for the first time.
+
+### Data Persistence
+The MongoDB data is persisted using a Docker volume named `mongodb_data`. This ensures that your data remains even if the containers are stopped or removed.
+
+To backup the data:
+```bash
+# Backup
+docker exec mongodb mongodump --out /backup
+
+# Restore
+docker exec mongodb mongorestore /backup
+```
+
+### Security Best Practices
+
+1. **Environment Variables**:
+   - Never commit `.env` files to version control
+   - Use `.env.example` as a template
+   - Store sensitive data in Docker secrets or environment variables
+   - Use Docker secrets for production deployments
+
+2. **Docker Security**:
+   - Use multi-stage builds for smaller images
+   - Run as non-root user
+   - Scan images for vulnerabilities
+   - Keep base images updated
+
+3. **CI/CD Security**:
+   - Use GitHub Secrets for sensitive data
+   - Encrypt sensitive data in CI/CD pipelines
+   - Use Docker secrets in production
+   - Implement proper access controls
